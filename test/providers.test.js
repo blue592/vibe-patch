@@ -87,3 +87,19 @@ test('large provider responses are rejected without printing upstream data', asy
   await assert.rejects(propose(selectModel('openai', 'test-model', env, fetcher), 'x', {}), /AI request failed/);
 });
 
+test('chunked oversized responses are rejected even without Content-Length', async () => {
+  const fetcher = async () => new Response(new ReadableStream({
+    start(controller) {
+      controller.enqueue(new Uint8Array(2_500_000));
+      controller.enqueue(new Uint8Array(2_500_000));
+      controller.close();
+    },
+  }), { status: 200 });
+  await assert.rejects(propose(selectModel('openai', 'test-model', env, fetcher), 'x', {}), /AI request failed/);
+});
+
+test('non-object provider JSON fails safely', async () => {
+  const fetcher = async () => new Response('null', { status: 200 });
+  await assert.rejects(propose(selectModel('openai', 'test-model', env, fetcher), 'x', {}), /finish cleanly/);
+});
+
