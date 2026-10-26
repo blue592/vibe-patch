@@ -54,6 +54,7 @@ function requestFor({ provider, model, apiKey }, prompt) {
 }
 
 function unpack(provider, result) {
+  if (!result || typeof result !== 'object') return null;
   if (provider === 'openai') {
     if (result.status !== 'completed') return null;
     const text = (result.output ?? []).flatMap(item => item.type === 'message' ? item.content ?? [] : [])
@@ -71,6 +72,31 @@ function unpack(provider, result) {
   return { text, usage: { inputTokens: result.usageMetadata?.promptTokenCount, outputTokens: result.usageMetadata?.candidatesTokenCount } };
 }
 
+// Bound actual bytes read, including chunked responses with no Content-Length.
+async function readBoundedJson(response, maxBytes = 4_000_000) {
+  if (Number(response.headers.get('content-length') ?? 0) > maxBytes) throw new Error('response too large');
+  if (!response.body) throw new Error('empty response');
+  const reader = response.body.getReader();
+  const chunks = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > maxBytes) throw new Error('response too large');
+      chunks.push(value);
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+}
+
 export async function propose(model, request, files) {
   const { url, headers, body } = requestFor(model, JSON.stringify({ request, files }));
   let result;
@@ -84,10 +110,7 @@ export async function propose(model, request, files) {
     });
     // Never expose upstream response bodies: they can contain secrets or source.
     if (!response.ok) throw new Error('provider rejected request');
-    if (Number(response.headers.get('content-length') ?? 0) > 4_000_000) throw new Error('response too large');
-    const raw = await response.text();
-    if (raw.length > 4_000_000) throw new Error('response too large');
-    result = JSON.parse(raw);
+    result = await readBoundedJson(response);
   } catch {
     throw new Error('AI request failed. Check the model ID, API key, quota, and network connection.');
   }
