@@ -18,17 +18,8 @@
   },
   "scripts": {
     "test": "node --test",
-    "check": "tsc -p jsconfig.json"
+    "check": "node --check src/cli.js && node --check src/core.js && node --check src/providers.js"
   },
-  "license": "MIT",
-  "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.84",
-    "@ai-sdk/google": "^4.0.101",
-    "@ai-sdk/openai": "^4.0.98",
-    "ai": "^7.0.146"
-  },
-  "devDependencies": {
-    "@types/node": "^26.6.5",
-    "typescript": "^7.0.2"
-  }
+  "license": "MIT"
 }
+
