@@ -103,3 +103,12 @@ test('non-object provider JSON fails safely', async () => {
   await assert.rejects(propose(selectModel('openai', 'test-model', env, fetcher), 'x', {}), /finish cleanly/);
 });
 
+
+test('Gemini thought text is excluded from final proposal JSON', async () => {
+  const fixture = { candidates: [{ finishReason: 'STOP', content: { parts: [
+    { thought: true, text: 'Internal summary, not JSON' }, { text: json },
+  ] } }] };
+  const fetcher = async () => Response.json(fixture);
+  const result = await propose(selectModel('gemini', 'test-model', env, fetcher), 'Build', {});
+  assert.deepEqual(result.output, proposal);
+});
