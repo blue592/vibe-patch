@@ -68,7 +68,7 @@ function unpack(provider, result) {
   }
   const candidate = result.candidates?.[0];
   if (candidate?.finishReason !== 'STOP') return null;
-  const text = (candidate.content?.parts ?? []).map(part => part.text ?? '').join('');
+  const text = (candidate.content?.parts ?? []).filter(part => !part.thought).map(part => part.text ?? '').join('');
   return { text, usage: { inputTokens: result.usageMetadata?.promptTokenCount, outputTokens: result.usageMetadata?.candidatesTokenCount } };
 }
 
