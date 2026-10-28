@@ -2,7 +2,7 @@
 
 **Describe a change. Choose Claude, OpenAI, or Gemini. Review it. Apply it.**
 
-An MIT-licensed local CLI for conversational coding with three model providers. Bring your own API keys, select the files to share, and keep control over every write.
+An MIT-licensed local CLI for conversational coding with three model providers. It uses small first-party adapters and Node.js built-in `fetch` instead of third-party AI SDK dependencies. Bring your own API keys, select the files to share, and keep control over every write.
 
 ## Features
 
@@ -65,7 +65,7 @@ The `YOUR_*_MODEL_ID` strings are placeholders. Use an exact text-generation mod
 | ChatGPT / OpenAI models | `openai` | `OPENAI_API_KEY` | [OpenAI models](https://developers.openai.com/api/docs/models) |
 | Gemini | `gemini` | `GOOGLE_GENERATIVE_AI_API_KEY` | [Google models](https://ai.google.dev/gemini-api/docs/models) |
 
-This tool uses direct provider APIs through AI SDK adapters. It does not log into the ChatGPT, Claude, or Gemini websites. Web subscriptions do not supply API credentials for this tool. Provider usage charges and account limits apply. Keep credentials private; OpenAI recommends loading API keys from environment variables or a key manager ([official authentication documentation](https://developers.openai.com/api/reference/overview)).
+This tool uses direct official provider APIs through small built-in HTTP adapters. It does not log into the ChatGPT, Claude, or Gemini websites. Web subscriptions do not supply API credentials for this tool. Provider usage charges and account limits apply. Keep credentials private; OpenAI recommends loading API keys from environment variables or a key manager ([official authentication documentation](https://developers.openai.com/api/reference/overview)).
 
 ## Make changes
 
@@ -132,6 +132,7 @@ npm test
 npm pack --dry-run
 ```
 
-Tests cover proposal validation, file conflicts, backups/undo, path containment, CLI demo flow, the real SDK generation pipeline with mock models, and all three provider adapters using intercepted HTTP requests. No live provider calls are made in tests. A successful adapter test does not establish live account access or generated code quality.
+Tests cover proposal validation, file conflicts, backups/undo, path containment, CLI demo flow, and the three native provider adapters using intercepted HTTP requests. No live provider calls are made in tests. A successful adapter test does not establish live account access or generated code quality. Provider API schemas may change; test current model compatibility separately before production use.
 
 See [한국어 사용법](README.ko.md), [contributing](CONTRIBUTING.md), and [security notes](SECURITY.md).
+
